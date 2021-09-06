@@ -105,7 +105,7 @@ dependencies {
     implementation "com.google.android.material:material:$material_version"
 
     testImplementation "junit:junit:$junit_version"
-    testImplementation "org.mockito:mockito-core:2.8.47"
+    testImplementation "org.mockito:mockito-core:3.12.4"
     testImplementation "org.powermock:powermock-api-mockito2:$powermockVersion"
     testImplementation "org.powermock:powermock-module-junit4:${powermockVersion}"
     testImplementation 'joda-time:joda-time:2.10.6'
