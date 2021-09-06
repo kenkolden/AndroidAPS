@@ -135,7 +135,7 @@ dependencies {
     }
     // to fix org.mockito:mockito-core dependency issues, fixed in mockito 3+
     testImplementation 'net.bytebuddy:byte-buddy:1.10.17'
-    testImplementation 'net.bytebuddy:byte-buddy-android:1.10.17'
+    testImplementation 'net.bytebuddy:byte-buddy-android:1.11.15'
     testImplementation 'net.bytebuddy:byte-buddy-agent:1.10.17'
 
     testImplementation "org.powermock:powermock-api-mockito2:${powermockVersion}"
