@@ -5,7 +5,7 @@ import android.os.Build
 import com.scottyab.rootbeer.RootBeer
 import dagger.android.HasAndroidInjector
 import info.nightscout.androidaps.R
-import info.nightscout.androidaps.interfaces.ConstraintsInterface
+import info.nightscout.androidaps.interfaces.Constraints
 import info.nightscout.androidaps.interfaces.PluginBase
 import info.nightscout.androidaps.interfaces.PluginDescription
 import info.nightscout.androidaps.interfaces.PluginType
@@ -27,7 +27,7 @@ class PhoneCheckerPlugin @Inject constructor(
     .showInList(false)
     .pluginName(R.string.phonechecker),
     aapsLogger, resourceHelper, injector
-), ConstraintsInterface {
+), Constraints {
 
     var phoneRooted: Boolean = false
     var devMode: Boolean = false
@@ -36,12 +36,12 @@ class PhoneCheckerPlugin @Inject constructor(
 
     private fun isDevModeEnabled(): Boolean {
         return android.provider.Settings.Secure.getInt(context.contentResolver,
-            android.provider.Settings.Global.DEVELOPMENT_SETTINGS_ENABLED, 0) != 0;
+            android.provider.Settings.Global.DEVELOPMENT_SETTINGS_ENABLED, 0) != 0
     }
 
     override fun onStart() {
         super.onStart()
-        phoneRooted = RootBeer(context).isRooted()
+        phoneRooted = RootBeer(context).isRooted
         devMode = isDevModeEnabled()
     }
 }

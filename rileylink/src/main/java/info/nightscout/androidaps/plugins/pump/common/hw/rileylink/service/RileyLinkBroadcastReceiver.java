@@ -20,7 +20,7 @@ import javax.inject.Inject;
 
 import dagger.android.DaggerBroadcastReceiver;
 import dagger.android.HasAndroidInjector;
-import info.nightscout.androidaps.interfaces.ActivePluginProvider;
+import info.nightscout.androidaps.interfaces.ActivePlugin;
 import info.nightscout.androidaps.logging.AAPSLogger;
 import info.nightscout.androidaps.logging.LTag;
 import info.nightscout.androidaps.plugins.pump.common.hw.rileylink.RileyLinkConst;
@@ -47,7 +47,7 @@ public class RileyLinkBroadcastReceiver extends DaggerBroadcastReceiver {
     @Inject AAPSLogger aapsLogger;
     @Inject RileyLinkServiceData rileyLinkServiceData;
     @Inject ServiceTaskExecutor serviceTaskExecutor;
-    @Inject ActivePluginProvider activePlugin;
+    @Inject ActivePlugin activePlugin;
 
     RileyLinkService serviceInstance;
     protected Map<String, List<String>> broadcastIdentifiers = null;
@@ -84,7 +84,7 @@ public class RileyLinkBroadcastReceiver extends DaggerBroadcastReceiver {
     }
 
     private RileyLinkService getServiceInstance() {
-        RileyLinkPumpDevice pumpDevice = (RileyLinkPumpDevice)activePlugin.getActivePump();
+        RileyLinkPumpDevice pumpDevice = (RileyLinkPumpDevice) activePlugin.getActivePump();
         return pumpDevice.getRileyLinkService();
     }
 
@@ -142,7 +142,6 @@ public class RileyLinkBroadcastReceiver extends DaggerBroadcastReceiver {
 
             return true;
         } else if (action.equals(RileyLinkConst.Intents.RileyLinkReady)) {
-
             aapsLogger.warn(LTag.PUMPBTCOMM, "RileyLinkConst.Intents.RileyLinkReady");
             // sendIPCNotification(RT2Const.IPC.MSG_note_WakingPump);
 
@@ -153,13 +152,12 @@ public class RileyLinkBroadcastReceiver extends DaggerBroadcastReceiver {
             String bleVersion = rileyLinkService.rfspy.getBLEVersionCached();
             RileyLinkFirmwareVersion rlVersion = rileyLinkServiceData.firmwareVersion;
 
-//            if (isLoggingEnabled())
             aapsLogger.debug(LTag.PUMPBTCOMM, "RfSpy version (BLE113): " + bleVersion);
             rileyLinkService.rileyLinkServiceData.versionBLE113 = bleVersion;
 
 //            if (isLoggingEnabled())
             aapsLogger.debug(LTag.PUMPBTCOMM, "RfSpy Radio version (CC110): " + rlVersion.name());
-            this.rileyLinkServiceData.versionCC110 = rlVersion;
+            this.rileyLinkServiceData.firmwareVersion = rlVersion;
 
             ServiceTask task = new InitializePumpManagerTask(injector, context);
             serviceTaskExecutor.startTask(task);
@@ -180,7 +178,6 @@ public class RileyLinkBroadcastReceiver extends DaggerBroadcastReceiver {
             return true;
         } else if (action.equals(RileyLinkConst.Intents.RileyLinkDisconnect)) {
             rileyLinkService.disconnectRileyLink();
-
             return true;
         } else {
             return false;

@@ -2,7 +2,7 @@ package info.nightscout.androidaps.queue.commands
 
 import dagger.android.HasAndroidInjector
 import info.nightscout.androidaps.data.PumpEnactResult
-import info.nightscout.androidaps.interfaces.ActivePluginProvider
+import info.nightscout.androidaps.interfaces.ActivePlugin
 import info.nightscout.androidaps.logging.LTag
 import info.nightscout.androidaps.queue.Callback
 import info.nightscout.androidaps.utils.LocalAlertUtils
@@ -11,15 +11,15 @@ import javax.inject.Inject
 
 class CommandReadStatus(
     injector: HasAndroidInjector,
-    private val reason: String,
+    val reason: String,
     callback: Callback?
 ) : Command(injector, CommandType.READSTATUS, callback) {
 
-    @Inject lateinit var activePlugin: ActivePluginProvider
+    @Inject lateinit var activePlugin: ActivePlugin
     @Inject lateinit var localAlertUtils: LocalAlertUtils
 
     override fun execute() {
-        activePlugin.activePump.getPumpStatus()
+        activePlugin.activePump.getPumpStatus(reason)
         localAlertUtils.notifyPumpStatusRead()
         aapsLogger.debug(LTag.PUMPQUEUE, "CommandReadStatus executed. Reason: $reason")
         val pump = activePlugin.activePump

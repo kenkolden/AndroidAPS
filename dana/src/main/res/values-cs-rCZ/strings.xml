@@ -5,9 +5,9 @@
     <string name="danars_pairingok">Spárováno</string>
     <string name="danars_pairingtimedout">Vypršel časový limit pro párování</string>
     <string name="danars_waitingforpairing">Čekání na spárování na pumpě</string>
-    <string name="danarspump">DanaRS</string>
+    <string name="danarspump">Dana-i/RS</string>
     <string name="danarspump_shortname">Dana</string>
-    <string name="description_pump_dana_rs">Ovladač pumpy pro DanaRS</string>
+    <string name="description_pump_dana_rs">Integrace pumpy pro pumpy DANA Diabecare RS a Dana-i</string>
     <string name="maxbolusviolation">Překročen maximální bolus</string>
     <string name="commanderror">Chyba příkazu</string>
     <string name="speederror">Chyba rychlosti</string>
@@ -106,7 +106,6 @@
     <string name="danars_password_title">Heslo pumpy (pouze v1)</string>
     <string name="danar_password_title">Heslo k pumpě</string>
     <string name="danar_useextended_title">Použít prodloužené bolusy pro &gt;200%%</string>
-    <string name="danar_visualizeextendedaspercentage_title">Zobrazovat prodloužený bolus v %%</string>
     <string name="bolusspeed">Rychlost bolusu</string>
     <string name="selectedpump">Vybraná pumpa</string>
     <string name="rs_loginsulinchange_title">Zaznamenat výměnu zásobníku</string>

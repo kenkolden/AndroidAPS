@@ -13,7 +13,7 @@ import android.widget.Toast;
 import androidx.annotation.StringRes;
 
 import info.nightscout.androidaps.R;
-import info.nightscout.androidaps.aaps;
+import info.nightscout.androidaps.Aaps;
 import info.nightscout.androidaps.interaction.actions.BolusActivity;
 import info.nightscout.androidaps.interaction.actions.ECarbActivity;
 import info.nightscout.androidaps.interaction.actions.WizardActivity;
@@ -67,16 +67,16 @@ public class ComplicationTapBroadcastReceiver extends BroadcastReceiver {
                 // do nothing
                 return;
             case WIZARD:
-                intentOpen = new Intent(aaps.getAppContext(), WizardActivity.class);
+                intentOpen = new Intent(Aaps.getAppContext(), WizardActivity.class);
                 break;
             case BOLUS:
-                intentOpen = new Intent(aaps.getAppContext(), BolusActivity.class);
+                intentOpen = new Intent(Aaps.getAppContext(), BolusActivity.class);
                 break;
             case ECARB:
-                intentOpen = new Intent(aaps.getAppContext(), ECarbActivity.class);
+                intentOpen = new Intent(Aaps.getAppContext(), ECarbActivity.class);
                 break;
             case STATUS:
-                intentOpen = new Intent(aaps.getAppContext(), StatusMenuActivity.class);
+                intentOpen = new Intent(Aaps.getAppContext(), StatusMenuActivity.class);
                 break;
             case WARNING_OLD:
             case WARNING_SYNC:
@@ -84,23 +84,23 @@ public class ComplicationTapBroadcastReceiver extends BroadcastReceiver {
                 long since = extras.getLong(EXTRA_COMPLICATION_SINCE, oneAndHalfMinuteAgo);
                 @StringRes int labelId = (action == ComplicationAction.WARNING_SYNC) ?
                         R.string.msg_warning_sync : R.string.msg_warning_old;
-                String msg = String.format(aaps.gs(labelId), DisplayFormat.shortTimeSince(since));
-                Toast.makeText(aaps.getAppContext(), msg, Toast.LENGTH_LONG).show();
+                String msg = String.format(context.getString(labelId), DisplayFormat.shortTimeSince(since));
+                Toast.makeText(Aaps.getAppContext(), msg, Toast.LENGTH_LONG).show();
                 break;
             case MENU:
             default:
-                intentOpen = new Intent(aaps.getAppContext(), MainMenuActivity.class);
+                intentOpen = new Intent(Aaps.getAppContext(), MainMenuActivity.class);
         }
 
         if (intentOpen != null) {
             // Perform intent - open dialog
             intentOpen.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            aaps.getAppContext().startActivity(intentOpen);
+            Aaps.getAppContext().startActivity(intentOpen);
         }
     }
 
     private ComplicationAction remapActionWithUserPreferences(ComplicationAction originalAction) {
-        final String userPrefAction = aaps.getComplicationTapAction();
+        final String userPrefAction = Aaps.getComplicationTapAction();
         switch (originalAction) {
             case WARNING_OLD:
             case WARNING_SYNC:
@@ -142,7 +142,7 @@ public class ComplicationTapBroadcastReceiver extends BroadcastReceiver {
         // Pass complicationId as the requestCode to ensure that different complications get
         // different intents.
         return PendingIntent.getBroadcast(
-                context, complicationId, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+                context, complicationId, intent, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
     }
 
     /**
@@ -161,7 +161,7 @@ public class ComplicationTapBroadcastReceiver extends BroadcastReceiver {
         // Pass complicationId as the requestCode to ensure that different complications get
         // different intents.
         return PendingIntent.getBroadcast(
-                context, complicationId, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+                context, complicationId, intent, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
     }
 
 }

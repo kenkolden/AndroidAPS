@@ -7,9 +7,10 @@ import android.os.SystemClock
 import android.text.Spanned
 import androidx.fragment.app.FragmentActivity
 import info.nightscout.androidaps.core.R
-import info.nightscout.androidaps.utils.extensions.runOnUiThread
+import info.nightscout.androidaps.extensions.runOnUiThread
 
 object OKDialog {
+
     @SuppressLint("InflateParams")
     fun show(context: Context, title: String, message: String, runnable: Runnable? = null) {
         var okClicked = false
@@ -217,4 +218,36 @@ object OKDialog {
             .show()
             .setCanceledOnTouchOutside(false)
     }
+
+    @SuppressLint("InflateParams")
+    fun showYesNoCancel(context: Context, title: String, message: String, yes: Runnable?, no: Runnable? = null) {
+        var okClicked = false
+        AlertDialogHelper.Builder(context)
+            .setMessage(message)
+            .setCustomTitle(AlertDialogHelper.buildCustomTitle(context, title))
+            .setPositiveButton(R.string.yes) { dialog: DialogInterface, _: Int ->
+                if (okClicked) return@setPositiveButton
+                else {
+                    okClicked = true
+                    dialog.dismiss()
+                    SystemClock.sleep(100)
+                    runOnUiThread(yes)
+                }
+            }
+            .setNegativeButton(R.string.no) { dialog: DialogInterface, _: Int ->
+                if (okClicked) return@setNegativeButton
+                else {
+                    okClicked = true
+                    dialog.dismiss()
+                    SystemClock.sleep(100)
+                    runOnUiThread(no)
+                }
+            }
+            .setNeutralButton(R.string.cancel) { dialog: DialogInterface, _: Int ->
+                dialog.dismiss()
+            }
+            .show()
+            .setCanceledOnTouchOutside(false)
+    }
+
 }

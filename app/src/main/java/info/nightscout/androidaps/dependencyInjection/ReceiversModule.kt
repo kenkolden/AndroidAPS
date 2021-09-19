@@ -12,10 +12,12 @@ import info.nightscout.androidaps.receivers.*
 @Suppress("unused")
 abstract class ReceiversModule {
 
+    @ContributesAndroidInjector abstract fun contributesAutoStartReceiver(): AutoStartReceiver
     @ContributesAndroidInjector abstract fun contributesBTReceiver(): BTReceiver
     @ContributesAndroidInjector abstract fun contributesChargingStateReceiver(): ChargingStateReceiver
     @ContributesAndroidInjector abstract fun contributesDataReceiver(): DataReceiver
     @ContributesAndroidInjector abstract fun contributesKeepAliveReceiver(): KeepAliveReceiver
+    @ContributesAndroidInjector abstract fun contributesKeepAliveWorker(): KeepAliveReceiver.KeepAliveWorker
     @ContributesAndroidInjector abstract fun contributesRileyLinkBluetoothStateReceiver(): RileyLinkBluetoothStateReceiver
     @ContributesAndroidInjector abstract fun contributesSmsReceiver(): SmsReceiver
     @ContributesAndroidInjector abstract fun contributesTimeDateOrTZChangeReceiver(): TimeDateOrTZChangeReceiver

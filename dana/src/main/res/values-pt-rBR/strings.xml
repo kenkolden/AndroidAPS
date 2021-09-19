@@ -5,9 +5,7 @@
     <string name="danars_pairingok">Emparelhamento OK</string>
     <string name="danars_pairingtimedout">Tempo emparelhamento excedido</string>
     <string name="danars_waitingforpairing">Aguardando emparelhamento na bomba</string>
-    <string name="danarspump">DanaRS</string>
     <string name="danarspump_shortname">Dana</string>
-    <string name="description_pump_dana_rs">Integração para bombas DANA Diabecare RS</string>
     <string name="maxbolusviolation">Transgressão Bólus máx</string>
     <string name="commanderror">Erro no comando</string>
     <string name="speederror">Erro velocidade</string>
@@ -95,7 +93,6 @@
     <string name="danar_bt_name_title">Dispositivo Bluetooth DanaR</string>
     <string name="danar_password_title">Senha da bomba</string>
     <string name="danar_useextended_title">Usar bólus prolongado de &gt;200%%</string>
-    <string name="danar_visualizeextendedaspercentage_title">Visualizar bólus prolongado como %%</string>
     <string name="bolusspeed">Velocidade Bólus</string>
     <string name="selectedpump">Bomba seleccionada</string>
 </resources>

@@ -5,9 +5,9 @@
     <string name="danars_pairingok">Соединение OK</string>
     <string name="danars_pairingtimedout">Истекло время ожидания соединения</string>
     <string name="danars_waitingforpairing">Ожидание соединения на помпе</string>
-    <string name="danarspump">DanaRS</string>
+    <string name="danarspump">Dana-i/RS</string>
     <string name="danarspump_shortname">Dana</string>
-    <string name="description_pump_dana_rs">Интеграция с помпой DANA Diabetcare RS</string>
+    <string name="description_pump_dana_rs">Интеграция с помпами DANA Diabecare RS и Dana-i</string>
     <string name="maxbolusviolation">Нарушение макс болюса</string>
     <string name="commanderror">Ошибка в команде</string>
     <string name="speederror">Ошибка в скорости</string>
@@ -106,7 +106,6 @@
     <string name="danars_password_title">Пароль для помпы (только v1)</string>
     <string name="danar_password_title">пароль помпы</string>
     <string name="danar_useextended_title">Для величин &gt;200%% пользуйтесь пролонгированным болюсом</string>
-    <string name="danar_visualizeextendedaspercentage_title">Показать пролонгированный болюс в %%</string>
     <string name="bolusspeed">Скорость подачи болюса</string>
     <string name="selectedpump">Выбранная помпа</string>
     <string name="rs_loginsulinchange_title">Отслеживать замену резервуара</string>
