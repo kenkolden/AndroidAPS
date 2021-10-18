@@ -2,6 +2,7 @@ package info.nightscout.androidaps.plugins.pump.common.hw.rileylink.service;
 
 import java.util.Locale;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
@@ -37,8 +38,8 @@ public class RileyLinkServiceData {
     private long lastServiceStateChange = 0L;
     public RileyLinkFirmwareVersion firmwareVersion; // here we have "compatibility level" version
     public RileyLinkTargetFrequency rileyLinkTargetFrequency;
-    public String rileyLinkAddress;
-    public String rileyLinkName;
+    @Nullable public String rileyLinkAddress;
+    @Nullable public String rileyLinkName;
     public Integer batteryLevel;
     public boolean showBatteryLevel = false;
     long lastTuneUpTime = 0L;
@@ -48,9 +49,11 @@ public class RileyLinkServiceData {
     public String versionBLE113;
     // radio version
     public String versionCC110;
+
+    // orangeLink
     public boolean isOrange;
-    public String versionOrangeFV;
-    public String versionOrangeHV;
+    public String versionOrangeFirmware;
+    public String versionOrangeHardware;
 
     public RileyLinkTargetDevice targetDevice;
 

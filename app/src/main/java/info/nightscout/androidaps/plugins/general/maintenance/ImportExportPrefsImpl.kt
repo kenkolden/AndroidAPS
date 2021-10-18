@@ -11,11 +11,14 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
+import androidx.work.*
+import dagger.android.HasAndroidInjector
 import info.nightscout.androidaps.BuildConfig
+import info.nightscout.androidaps.MainApp
 import info.nightscout.androidaps.R
 import info.nightscout.androidaps.activities.DaggerAppCompatActivityWithResult
 import info.nightscout.androidaps.activities.PreferencesActivity
-import info.nightscout.androidaps.database.entities.UserEntry
+import info.nightscout.androidaps.database.AppRepository
 import info.nightscout.androidaps.database.entities.UserEntry.Action
 import info.nightscout.androidaps.database.entities.UserEntry.Sources
 import info.nightscout.androidaps.events.EventAppExit
@@ -28,6 +31,8 @@ import info.nightscout.androidaps.plugins.bus.RxBus
 import info.nightscout.androidaps.plugins.general.maintenance.formats.*
 import info.nightscout.androidaps.utils.AndroidPermission
 import info.nightscout.androidaps.utils.DateUtil
+import info.nightscout.androidaps.utils.MidnightTime
+import info.nightscout.androidaps.utils.T
 import info.nightscout.androidaps.utils.ToastUtils
 import info.nightscout.androidaps.utils.alertDialogs.OKDialog
 import info.nightscout.androidaps.utils.alertDialogs.PrefImportSummaryDialog
@@ -37,7 +42,6 @@ import info.nightscout.androidaps.utils.buildHelper.BuildHelper
 import info.nightscout.androidaps.utils.protection.PasswordCheck
 import info.nightscout.androidaps.utils.resources.ResourceHelper
 import info.nightscout.androidaps.utils.sharedPreferences.SP
-import io.reactivex.Single
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.IOException
@@ -360,20 +364,49 @@ class ImportExportPrefsImpl @Inject constructor(
         }
     }
 
-    override fun exportUserEntriesCsv(activity: FragmentActivity, singleEntries: Single<List<UserEntry>>) {
-        val entries = singleEntries.blockingGet()
-        prefFileList.ensureExportDirExists()
-        val newFile = prefFileList.newExportCsvFile()
+    override fun exportUserEntriesCsv(activity: FragmentActivity) {
+        WorkManager.getInstance(activity).enqueueUniqueWork(
+            "export",
+            ExistingWorkPolicy.APPEND_OR_REPLACE,
+            OneTimeWorkRequest.Builder(CsvExportWorker::class.java).build()
+        )
+    }
 
-        try {
-            classicPrefsFormat.saveCsv(newFile, entries)
-            ToastUtils.okToast(activity, resourceHelper.gs(R.string.ue_exported))
-        } catch (e: FileNotFoundException) {
-            ToastUtils.errorToast(activity, resourceHelper.gs(R.string.filenotfound) + " " + newFile)
-            log.error(LTag.CORE, "Unhandled exception", e)
-        } catch (e: IOException) {
-            ToastUtils.errorToast(activity, e.message)
-            log.error(LTag.CORE, "Unhandled exception", e)
+    class CsvExportWorker(
+        context: Context,
+        params: WorkerParameters
+    ) : Worker(context, params) {
+
+        @Inject lateinit var injector: HasAndroidInjector
+        @Inject lateinit var aapsLogger: AAPSLogger
+        @Inject lateinit var repository: AppRepository
+        @Inject lateinit var classicPrefsFormat: ClassicPrefsFormat
+        @Inject lateinit var resourceHelper: ResourceHelper
+        @Inject lateinit var prefFileList: PrefFileListProvider
+        @Inject lateinit var mainApp: MainApp
+
+        init {
+            (context.applicationContext as HasAndroidInjector).androidInjector().inject(this)
+        }
+
+        override fun doWork(): Result {
+            val entries = repository.getUserEntryFilteredDataFromTime(MidnightTime.calc() - T.days(90).msecs()).blockingGet()
+            prefFileList.ensureExportDirExists()
+            val newFile = prefFileList.newExportCsvFile()
+            var ret = Result.success()
+            try {
+                classicPrefsFormat.saveCsv(newFile, entries)
+                ToastUtils.okToast(mainApp, resourceHelper.gs(R.string.ue_exported))
+            } catch (e: FileNotFoundException) {
+                ToastUtils.errorToast(mainApp, resourceHelper.gs(R.string.filenotfound) + " " + newFile)
+                aapsLogger.error(LTag.CORE, "Unhandled exception", e)
+                ret = Result.failure(workDataOf("Error" to "Error FileNotFoundException"))
+            } catch (e: IOException) {
+                ToastUtils.errorToast(mainApp, e.message)
+                aapsLogger.error(LTag.CORE, "Unhandled exception", e)
+                ret = Result.failure(workDataOf("Error" to "Error IOException"))
+            }
+            return ret
         }
     }
 }
