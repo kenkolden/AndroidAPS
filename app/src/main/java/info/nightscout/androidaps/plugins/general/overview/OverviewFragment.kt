@@ -50,6 +50,7 @@ import info.nightscout.androidaps.plugins.aps.loop.LoopPlugin
 import info.nightscout.androidaps.plugins.aps.loop.events.EventNewOpenLoopNotification
 import info.nightscout.androidaps.plugins.bus.RxBus
 import info.nightscout.androidaps.plugins.configBuilder.ConstraintChecker
+import info.nightscout.androidaps.plugins.constraints.bgQualityCheck.BgQualityCheckPlugin
 import info.nightscout.androidaps.plugins.general.automation.AutomationPlugin
 import info.nightscout.androidaps.plugins.general.nsclient.data.NSDeviceStatus
 import info.nightscout.androidaps.plugins.general.overview.activities.QuickWizardListActivity
@@ -61,7 +62,6 @@ import info.nightscout.androidaps.plugins.iob.iobCobCalculator.GlucoseStatusProv
 import info.nightscout.androidaps.plugins.pump.common.defs.PumpType
 import info.nightscout.androidaps.plugins.source.DexcomPlugin
 import info.nightscout.androidaps.plugins.source.XdripPlugin
-import info.nightscout.androidaps.queue.CommandQueue
 import info.nightscout.androidaps.skins.SkinProvider
 import info.nightscout.androidaps.utils.DateUtil
 import info.nightscout.androidaps.utils.DefaultValueHelper
@@ -122,6 +122,7 @@ class OverviewFragment : DaggerFragment(), View.OnClickListener, OnLongClickList
     @Inject lateinit var overviewData: OverviewData
     @Inject lateinit var overviewPlugin: OverviewPlugin
     @Inject lateinit var automationPlugin: AutomationPlugin
+    @Inject lateinit var bgQualityCheckPlugin: BgQualityCheckPlugin
 
     private val disposable = CompositeDisposable()
 
@@ -661,6 +662,18 @@ class OverviewFragment : DaggerFragment(), View.OnClickListener, OnLongClickList
                     else binding.infoLayout.bg.paintFlags and Paint.STRIKE_THRU_TEXT_FLAG.inv()
                 binding.infoLayout.timeAgo.text = dateUtil.minAgo(rh, overviewData.lastBg?.timestamp)
                 binding.infoLayout.timeAgoShort.text = "(" + dateUtil.minAgoShort(overviewData.lastBg?.timestamp) + ")"
+
+                val qualityIcon = bgQualityCheckPlugin.icon()
+                if (qualityIcon != 0) {
+                    binding.infoLayout.bgQuality.visibility = View.VISIBLE
+                    binding.infoLayout.bgQuality.setImageResource(qualityIcon)
+                    binding.infoLayout.bgQuality.setOnClickListener {
+                        context?.let { context ->  OKDialog.show(context, rh.gs(R.string.data_status), bgQualityCheckPlugin.message) }
+                    }
+                } else {
+                    binding.infoLayout.bgQuality.visibility = View.GONE
+                }
+
             }
 
             OverviewData.Property.PROFILE          -> {
@@ -709,7 +722,7 @@ class OverviewFragment : DaggerFragment(), View.OnClickListener, OnLongClickList
                 binding.infoLayout.extendedLayout.setOnClickListener {
                     activity?.let { OKDialog.show(it, rh.gs(R.string.extended_bolus), overviewData.extendedBolusDialogText) }
                 }
-                binding.infoLayout.extendedLayout.visibility = (overviewData.extendedBolus != null && !pump.isFakingTempsByExtendedBoluses).toVisibility()
+                binding.infoLayout.extendedLayout.visibility = (iobCobCalculator.getExtendedBolus(dateUtil.now()) != null && !pump.isFakingTempsByExtendedBoluses).toVisibility()
 
             }
 

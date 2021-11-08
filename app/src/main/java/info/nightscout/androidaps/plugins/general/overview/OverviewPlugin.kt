@@ -44,7 +44,6 @@ class OverviewPlugin @Inject constructor(
     rh: ResourceHelper,
     private val config: Config,
     private val dateUtil: DateUtil,
-    private val profileFunction: ProfileFunction,
     private val iobCobCalculator: IobCobCalculator,
     private val repository: AppRepository,
     private val overviewData: OverviewData,
@@ -95,11 +94,11 @@ class OverviewPlugin @Inject constructor(
         disposable += rxBus
                 .toObservable(EventTempBasalChange::class.java)
                 .observeOn(aapsSchedulers.io)
-                .subscribe({ loadTemporaryBasal("EventTempBasalChange") }, fabricPrivacy::logException)
+                .subscribe({ overviewBus.send(EventUpdateOverview("EventTempBasalChange", OverviewData.Property.TEMPORARY_BASAL)) }, fabricPrivacy::logException)
         disposable += rxBus
                 .toObservable(EventExtendedBolusChange::class.java)
                 .observeOn(aapsSchedulers.io)
-                .subscribe({ loadExtendedBolus("EventExtendedBolusChange") }, fabricPrivacy::logException)
+                .subscribe({ overviewBus.send(EventUpdateOverview("EventExtendedBolusChange", OverviewData.Property.EXTENDED_BOLUS)) }, fabricPrivacy::logException)
         disposable += rxBus
                 .toObservable(EventNewBG::class.java)
                 .observeOn(aapsSchedulers.io)
@@ -153,6 +152,18 @@ class OverviewPlugin @Inject constructor(
                .observeOn(aapsSchedulers.io)
                .subscribe({
                     overviewData.pumpStatus = it.getStatus(rh)
+               }, fabricPrivacy::logException)
+        disposable += rxBus
+               .toObservable(EventPreferenceChange::class.java)
+               .observeOn(aapsSchedulers.io)
+               .subscribe({ event ->
+                    if (event.isChanged(rh, R.string.key_units)) {
+                        overviewData.reset()
+                        overviewData.prepareBucketedData("EventBucketedDataCreated")
+                        overviewData.prepareBgData("EventBucketedDataCreated")
+                        overviewBus.send(EventUpdateOverview("EventBucketedDataCreated", OverviewData.Property.GRAPH))
+                        loadAll("EventPreferenceChange")
+                    }
                }, fabricPrivacy::logException)
 
         Thread { loadAll("onResume") }.start()
@@ -261,8 +272,6 @@ class OverviewPlugin @Inject constructor(
     private fun loadAll(from: String) {
         loadBg(from)
         loadProfile(from)
-        loadTemporaryBasal(from)
-        loadExtendedBolus(from)
         loadTemporaryTarget(from)
         loadIobCobResults(from)
         loadAsData(from)
@@ -277,16 +286,6 @@ class OverviewPlugin @Inject constructor(
 
     private fun loadProfile(from: String) {
         overviewBus.send(EventUpdateOverview(from, OverviewData.Property.PROFILE))
-    }
-
-    private fun loadTemporaryBasal(from: String) {
-        overviewData.temporaryBasal = iobCobCalculator.getTempBasalIncludingConvertedExtended(dateUtil.now())
-        overviewBus.send(EventUpdateOverview(from, OverviewData.Property.TEMPORARY_BASAL))
-    }
-
-    private fun loadExtendedBolus(from: String) {
-        overviewData.extendedBolus = iobCobCalculator.getExtendedBolus(dateUtil.now())
-        overviewBus.send(EventUpdateOverview(from, OverviewData.Property.EXTENDED_BOLUS))
     }
 
     private fun loadTemporaryTarget(from: String) {
