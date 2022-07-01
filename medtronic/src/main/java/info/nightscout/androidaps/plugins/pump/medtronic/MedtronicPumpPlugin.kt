@@ -20,6 +20,7 @@ import info.nightscout.androidaps.plugins.general.actions.defs.CustomActionType
 import info.nightscout.androidaps.plugins.general.overview.events.EventNewNotification
 import info.nightscout.androidaps.plugins.general.overview.notifications.Notification
 import info.nightscout.androidaps.plugins.pump.common.PumpPluginAbstract
+import info.nightscout.androidaps.plugins.pump.common.data.PumpStatus
 import info.nightscout.androidaps.plugins.pump.common.defs.PumpDriverState
 import info.nightscout.androidaps.plugins.pump.common.defs.PumpType
 import info.nightscout.androidaps.plugins.pump.common.events.EventRefreshButtonState
@@ -54,8 +55,6 @@ import info.nightscout.androidaps.plugins.pump.medtronic.util.MedtronicUtil.Comp
 import info.nightscout.androidaps.utils.DateUtil
 import info.nightscout.androidaps.utils.FabricPrivacy
 import info.nightscout.androidaps.utils.TimeChangeType
-import info.nightscout.androidaps.interfaces.ResourceHelper
-import info.nightscout.androidaps.plugins.pump.common.data.PumpStatus
 import info.nightscout.androidaps.utils.rx.AapsSchedulers
 import info.nightscout.shared.logging.AAPSLogger
 import info.nightscout.shared.logging.LTag
@@ -202,9 +201,7 @@ class MedtronicPumpPlugin @Inject constructor(
             do {
                 SystemClock.sleep(60000)
                 if (this.isInitialized) {
-                    val statusRefresh = workWithStatusRefresh(
-                        StatusRefreshAction.GetData, null, null
-                    )!!
+                    val statusRefresh = synchronized(statusRefreshMap) { HashMap(statusRefreshMap) }
                     if (doWeHaveAnyStatusNeededRefreshing(statusRefresh)) {
                         if (!commandQueue.statusInQueue()) {
                             commandQueue.readStatus(rh.gs(R.string.scheduled_status_refresh), null)
@@ -306,12 +303,8 @@ class MedtronicPumpPlugin @Inject constructor(
     private val isPumpNotReachable: Boolean
         get() {
             val rileyLinkServiceState = rileyLinkServiceData.rileyLinkServiceState
-            if (rileyLinkServiceState == null) {
-                aapsLogger.debug(LTag.PUMP, "RileyLink unreachable. RileyLinkServiceState is null.")
-                return false
-            }
-            if (rileyLinkServiceState != RileyLinkServiceState.PumpConnectorReady //
-                && rileyLinkServiceState != RileyLinkServiceState.RileyLinkReady //
+            if (rileyLinkServiceState != RileyLinkServiceState.PumpConnectorReady
+                && rileyLinkServiceState != RileyLinkServiceState.RileyLinkReady
                 && rileyLinkServiceState != RileyLinkServiceState.TuneUpDevice
             ) {
                 aapsLogger.debug(LTag.PUMP, "RileyLink unreachable.")
@@ -321,10 +314,7 @@ class MedtronicPumpPlugin @Inject constructor(
         }
 
     private fun refreshAnyStatusThatNeedsToBeRefreshed() {
-        val statusRefresh = workWithStatusRefresh(
-            StatusRefreshAction.GetData, null,
-            null
-        )!!
+        val statusRefresh = synchronized(statusRefreshMap) { HashMap(statusRefreshMap) }
         if (!doWeHaveAnyStatusNeededRefreshing(statusRefresh)) {
             return
         }
@@ -664,19 +654,9 @@ class MedtronicPumpPlugin @Inject constructor(
     @Suppress("SameParameterValue")
     private fun setNotReachable(isBolus: Boolean, success: Boolean): PumpEnactResult {
         setRefreshButtonEnabled(true)
-        if (isBolus) {
-            bolusDeliveryType = BolusDeliveryType.Idle
-        }
-        return if (success) {
-            PumpEnactResult(injector) //
-                .success(true) //
-                .enacted(false)
-        } else {
-            PumpEnactResult(injector) //
-                .success(false) //
-                .enacted(false) //
-                .comment(R.string.medtronic_pump_status_pump_unreachable)
-        }
+        if (isBolus) bolusDeliveryType = BolusDeliveryType.Idle
+        return if (success) PumpEnactResult(injector).success(true).enacted(false)
+        else PumpEnactResult(injector).success(false).enacted(false).comment(R.string.medtronic_pump_status_pump_unreachable)
     }
 
     override fun stopBolusDelivering() {
@@ -693,7 +673,7 @@ class MedtronicPumpPlugin @Inject constructor(
     }
 
     // if enforceNew===true current temp basal is canceled and new TBR set (duration is prolonged),
-    // if false and the same rate is requested enacted=false and success=true is returned and TBR is not changed
+// if false and the same rate is requested enacted=false and success=true is returned and TBR is not changed
     @Synchronized
     override fun setTempBasalAbsolute(absoluteRate: Double, durationInMinutes: Int, profile: Profile, enforceNew: Boolean, tbrType: TemporaryBasalType): PumpEnactResult {
         setRefreshButtonEnabled(false)
@@ -980,39 +960,12 @@ class MedtronicPumpPlugin @Inject constructor(
             MedtronicStatusRefreshType.RemainingInsulin                                                                                                                     -> {
                 val remaining = medtronicPumpStatus.reservoirRemainingUnits
                 val min: Int = if (remaining > 50) 4 * 60 else if (remaining > 20) 60 else 15
-                workWithStatusRefresh(StatusRefreshAction.Add, refreshType, getTimeInFutureFromMinutes(min))
+                synchronized(statusRefreshMap) { statusRefreshMap[refreshType] = getTimeInFutureFromMinutes(min) }
             }
 
             MedtronicStatusRefreshType.PumpTime, MedtronicStatusRefreshType.Configuration, MedtronicStatusRefreshType.BatteryStatus, MedtronicStatusRefreshType.PumpHistory -> {
-                workWithStatusRefresh(
-                    StatusRefreshAction.Add, refreshType,
-                    getTimeInFutureFromMinutes(refreshType.refreshTime + additionalTimeInMinutes)
-                )
+                synchronized(statusRefreshMap) { statusRefreshMap[refreshType] = getTimeInFutureFromMinutes(refreshType.refreshTime + additionalTimeInMinutes) }
             }
-        }
-    }
-
-    private enum class StatusRefreshAction {
-        Add,  //
-        GetData
-    }
-
-    @Synchronized
-    private fun workWithStatusRefresh(
-        action: StatusRefreshAction,  //
-        statusRefreshType: MedtronicStatusRefreshType?,  //
-        time: Long?
-    ): Map<MedtronicStatusRefreshType, Long>? {
-        return when (action) {
-            StatusRefreshAction.Add     -> {
-                statusRefreshMap[statusRefreshType!!] = time!!
-                null
-            }
-
-            StatusRefreshAction.GetData -> {
-                HashMap(statusRefreshMap)
-            }
-
         }
     }
 
